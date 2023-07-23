@@ -28,7 +28,7 @@ function constants.load()
     if love.filesystem.isFused() then
         savedir = savedir .. "\\savedata\\"
     else
-        savedir = savedir .. "/CosmoteerShipBuilder/savedata/"
+        savedir = savedir .. "/CosmoDoodler/savedata/"
     end
 
     enums.load()
