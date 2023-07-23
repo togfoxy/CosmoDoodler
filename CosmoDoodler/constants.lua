@@ -34,14 +34,11 @@ function constants.load()
     enums.load()
     -- add extra items below this line
 
-    TOOBAR_HEIGHT = 350
-
+    TOOLBAR_HEIGHT = 350
     CURRENT_SELECTION = 1           -- the type of object that will be placed with a mouse click. Algins to enum.image...
-    CURRENT_GROUP = nil             -- the current tool group that is selected. Is an index
 
     TRANSLATE_TOOLBAR_X = 0
     TRANSLATE_TOOLBAR_Y = 0
-
 
     MOUSE_MODE = enum.mousemodeNormal       -- controls the state of the mouse
 

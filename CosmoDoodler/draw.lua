@@ -27,7 +27,7 @@ function draw.drawObjects()
         end
 
         local imagetype = v.type    -- a number that is also an enum
-        love.graphics.draw(IMAGE[imagetype], v.x, v.y, 0, 1, 1, 0,0)
+        love.graphics.draw(IMAGE[imagetype], v.x, v.y, v.rotation, 1, 1, 0,0)
     end
 end
 
@@ -35,7 +35,7 @@ function draw.drawToolbar()
     -- draws the top toolbar that has the objects
 
     love.graphics.setColor(1, 1, 1, 0.25)
-    love.graphics.rectangle("fill", 0,0, SCREEN_WIDTH, TOOBAR_HEIGHT)
+    love.graphics.rectangle("fill", 0,0, SCREEN_WIDTH, TOOLBAR_HEIGHT)
 
     love.graphics.setColor(1, 1, 1, 1)
 
@@ -57,7 +57,7 @@ end
 
 function draw.trashcan()
     love.graphics.setColor(1, 0.5, 0.5, 0.5, 1)
-    love.graphics.rectangle("fill", 0, TOOBAR_HEIGHT, 100, SCREEN_HEIGHT)
+    love.graphics.rectangle("fill", 0, TOOLBAR_HEIGHT, 100, SCREEN_HEIGHT)
 end
 
 return draw
