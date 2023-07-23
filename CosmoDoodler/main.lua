@@ -33,12 +33,12 @@ end
 function love.mousepressed( x, y, button, istouch, presses)
 	local camx, camy = cam:toWorld(x, y)	-- converts screen x/y to world x/y
 
-	if y <= TOOBAR_HEIGHT then
+	if y <= TOOLBAR_HEIGHT then
 		-- toolbar. Do nothing. Selection is managed in mouserelease
-	elseif button == 1 and camx > 100 and camy > TOOBAR_HEIGHT then		-- not trash can
-		fun.selectObject(camx, camy)		-- will select or clear depending on mouse click
-		local selectedIndex = fun.getSelectedObject()
-		if selectedIndex == nil then
+	elseif button == 1 and camx > 100 and camy > TOOLBAR_HEIGHT then		-- not trash can
+		local objectclicked = fun.selectObject(camx, camy)		-- will select or clear depending on mouse click
+
+		if not objectclicked then
 			-- no object selected so create an object
 			local selectedgroup = fun.getSelectedToolbarGroup()
 			if selectedgroup == nil then
@@ -52,6 +52,14 @@ function love.mousepressed( x, y, button, istouch, presses)
 			end
 		else
 			-- existing object is clicked
+			if (love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) then
+				-- multi-select
+				fun.selectObject(camx, camy)
+			elseif love.keyboard.isDown("lshift") == false and love.keyboard.isDown("rshift") == false then
+				-- single select
+				fun.clearAllSelectedObjects()
+				fun.selectObject(camx, camy)
+			end
 		end
 	end
 end
@@ -59,11 +67,10 @@ end
 function love.mousereleased(x, y, button, isTouch)
 	local camx, camy = cam:toWorld(x, y)	-- converts screen x/y to world x/y
 
-	if button == 1 and y <= TOOBAR_HEIGHT then
+	if button == 1 and y <= TOOLBAR_HEIGHT then
 		-- toolbar is clicked
 		-- do bounding box things
 		for k, group in pairs(TOOLBAR) do
-			CURRENT_GROUP = nil					-- nil it here and reset it down below
 			local groupwidth, groupheight = fun.getWidthHeightofToolGroup(group)
 			local x1 = group.x
 			local x2 = x1 + groupwidth
@@ -74,7 +81,6 @@ function love.mousereleased(x, y, button, isTouch)
 			if x >= x1 and x <= x2 and y >= y1 and y <= y2 then
 				-- click detected
 				group.isSelected = not group.isSelected
-				if group.isSelected then CURRENT_GROUP = group.index end
 			else
 				group.isSelected = false
 			end
@@ -84,7 +90,33 @@ function love.mousereleased(x, y, button, isTouch)
 		local selectedIndex = fun.getSelectedObject()
 		fun.deleteObject(selectedIndex)
 	elseif button == 2 then
-		fun.clearAllSelectedObjects()
+		if love.mouse.isDown(1) then
+			-- rotate current item
+			local selectedIndex = fun.getSelectedObject()
+			fun.rotateObject(selectedIndex)
+		elseif y <= TOOLBAR_HEIGHT then
+			-- maybe delete a group
+			-- do bounding box things
+			for k, group in pairs(TOOLBAR) do
+				local groupwidth, groupheight = fun.getWidthHeightofToolGroup(group)
+				local x1 = group.x
+				local x2 = x1 + groupwidth
+
+				local y1 = group.y
+				local y2 = y1 + groupheight
+
+				if x >= x1 and x <= x2 and y >= y1 and y <= y2 then
+					-- click detected
+					if group.isVanilla then
+						-- delete is not allowed
+					else
+						TOOLBAR[k] = nil
+					end
+				end
+			end
+		else
+			fun.clearAllSelectedObjects()
+		end
 	else
 
 	end
@@ -94,11 +126,12 @@ function love.mousemoved( x, y, dx, dy, istouch )
 	local camx, camy = cam:toWorld(x, y)	-- converts screen x/y to world x/y
 
 	if love.mouse.isDown(1) then
-		local selectedIndex = fun.getSelectedObject()
-		if selectedIndex ~= nil then
-			local nodex, nodey = fun.getNearestNode(camx, camy)
-			fun.updateObjectXY(selectedIndex, nodex, nodey)
-		end
+		--! restore the move function
+		-- local selectedIndex = fun.getSelectedObject()
+		-- if selectedIndex ~= nil then
+		-- 	local nodex, nodey = fun.getNearestNode(camx, camy)
+		-- 	fun.updateObjectXY(selectedIndex, nodex, nodey)
+		-- end
 	end
 
     if love.mouse.isDown(2) or love.mouse.isDown(3) then
@@ -112,7 +145,7 @@ function love.wheelmoved(x, y)
 
 	local mousex, mousey = love.mouse.getPosition()
 
-	if mousey <= TOOBAR_HEIGHT then
+	if mousey <= TOOLBAR_HEIGHT then
 		-- scroll toolbar
 		for k, v in pairs(TOOLBAR) do
 			if y > 0 then
@@ -154,6 +187,9 @@ function love.keyreleased( key, scancode )
 			-- save toolbar and objects
 			cf.saveTableToFile("toolbar.dat", TOOLBAR)
 			cf.saveTableToFile("objects.dat", OBJECTS)
+		elseif love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+			-- save the selected items as a module
+			fun.saveModule()
 		end
 	end
 
@@ -193,7 +229,7 @@ function love.load()
 
 	fun.initialiseToolbar2()
 	OBJECTS = cf.loadTableFromFile("objects.dat")
-	TOOLBAR = cf.loadTableFromFile("toolbar.dat")
+	-- TOOLBAR = cf.loadTableFromFile("toolbar.dat")
 
 end
 

@@ -10,6 +10,8 @@ function functions.loadImages()
     IMAGE[enum.imageShieldgenSmall] = love.graphics.newImage("assets/images/shieldgen_small.png")
     IMAGE[enum.imageReactorLarge] = love.graphics.newImage("assets/images/reactor_large.png")
     IMAGE[enum.imageControlroomSmall] = love.graphics.newImage("assets/images/controlroom_small.png")
+    IMAGE[enum.imageHyperdriveSmall] = love.graphics.newImage("assets/images/hyperdrive_small.png")
+    IMAGE[enum.imageLaserblasterSmall] = love.graphics.newImage("assets/images/laserblaster_small.png")
 end
 
 function functions.loadFonts()
@@ -45,7 +47,7 @@ function functions.createObjects(mousex, mousey)
                     newobject.x = mousex + icon.x
                     newobject.y = mousey + icon.y
                     newobject.type = icon.type
-                    newobject.index = #OBJECTS + 1
+                    newobject.index = fun.getLastIndex() + 1
                     table.insert(OBJECTS, newobject)
                 end
             end
@@ -56,8 +58,8 @@ end
 function functions.getLastIndex()
     -- gets the last index in OBJECTS table. Useful for deleting the last object.
     -- Output: nil means empty table.
-    local highestindex = nil
-    for k, v in pairs(OBJECTS) do
+    local highestindex = 0
+    for k, v in pairs(TOOLBAR) do
         if highestindex == nil or v.index > highestindex then
             highestindex = v.index
         end
@@ -80,14 +82,16 @@ function functions.initialiseToolbar2()
     local x = 50    -- the x/y is for the group - not the icons
     local y = 33
 
+    -- add each icon as a single item group
     for i = 1, #IMAGE do
         -- create an empty group
         local toolgroup = {}
         toolgroup.x = x
         toolgroup.y = y
-        toolgroup.index = #TOOLBAR + 1
+        toolgroup.isVanilla = true
+        toolgroup.index = fun.getLastIndex() + 1
 
-        -- create and addthe icons
+        -- create and add the icons
         local toolbaritem = {}
         toolbaritem.type = i
         toolbaritem.x = 0
@@ -102,7 +106,7 @@ function functions.initialiseToolbar2()
     local toolgroup = {}
     toolgroup.x = x
     toolgroup.y = y
-    toolgroup.index = #TOOLBAR + 1
+    toolgroup.index = fun.getLastIndex() + 1
 
     local toolbaritem = {}
     toolbaritem.type = 1
@@ -117,11 +121,18 @@ function functions.initialiseToolbar2()
     table.insert(toolgroup, toolbaritem)
 
     table.insert(TOOLBAR, toolgroup)
-    x = x + 100
+    x = x + 20
+    print("x is now " .. x)
+
+    print(inspect(TOOLBAR))
 end
 
 function functions.selectObject(x, y)
-
+    -- finds the object under the x/y and makes it selected
+    -- does not unselect already selected items
+    -- input: x,y
+    -- output: returns true if something is under the mouse
+    local result = false
     for k, v in pairs(OBJECTS) do
         -- do bounding box
         local x1 = v.x
@@ -135,12 +146,13 @@ function functions.selectObject(x, y)
 
         if x > x1 and x < x2 and y > y1 and y < y2 then
             v.isSelected = true
+            result = true
         else
-            v.isSelected = false
+            -- v.isSelected = false
         end
     end
+    return result
 end
-
 
 function functions.getSelectedObject()
     -- returns the INDEX of the selected object or nil
@@ -197,7 +209,7 @@ end
 function functions.getWidthHeightofToolGroup(group)
     -- checks all the x's and widths of all the tools and returns the rightmost x2 value
     -- input: a tool group
-    -- output: width and height
+    -- output: the width of the group
 
     local xresult, yresult = 0, 0
     for k, tool in pairs(group) do
@@ -223,5 +235,91 @@ function functions.getSelectedToolbarGroup()
     return nil
 end
 
+function functions.rotateObject(selectedIndex)
+    for k, object in pairs(OBJECTS) do
+        if object.isSelected then
+            if object.rotation == nil then object.rotation = 0 end
+
+            -- the rotation is around the top left corner of the image. This makes the rotation seem odd. Compensate by moving the image one cell and then rotating
+            -- math.pi/2 = 90 degrees
+            if object.rotation == 0 then object.x = object.x + 64 end               -- move to the right one cell
+            if object.rotation == math.pi/2 then object.y = object.y + 64 end       -- move down
+            if object.rotation == 2 * (math.pi / 2) then object.x = object.x - 64 end
+            if object.rotation == 3 * (math.pi / 2) then object.y = object.y - 64 end
+
+            object.rotation = object.rotation + math.pi/2
+            if object.rotation > math.pi * 2 then object.rotation = object.rotation - (math.pi * 2) end
+        end
+    end
+end
+
+function functions.saveModule()
+    -- saves all selected items as a group to the toolbar
+
+    -- these values capture the upper leftmost item in the group
+    local minx
+    local miny
+
+    local x, y = fun.getToolbarLength()         -- only care about x
+
+    local toolgroup = {}
+    toolgroup.x = x + 20
+    toolgroup.y = 33
+    toolgroup.isVanilla = false
+    toolgroup.index = fun.getLastIndex() + 1
+
+    -- find all selected items and add them to the group
+    for k, object in pairs(OBJECTS) do
+        if object.isSelected then
+            local toolbaritem = {}
+            toolbaritem.type = object.type
+            toolbaritem.x = object.x                -- this will get modified below
+            toolbaritem.y = object.y
+            table.insert(toolgroup, toolbaritem)
+
+            if minx == nil or object.x < minx then minx = object.x end
+            if miny == nil or object.y < miny then miny = object.y end
+        end
+    end
+
+    -- now cycle through that toolgrou and rationalise the x/y values so they are all relative to the upper leftmost item
+    -- minx/y is understood. Make all value relative to that
+    for k, object in pairs(toolgroup) do
+        if type(object) == "table" then
+            object.x = object.x - minx
+            object.y = object.y - miny
+        end
+    end
+    table.insert(TOOLBAR, toolgroup)
+end
+
+function functions.getHighestIndex()
+    --!
+    local result = nil
+    for k, group in pairs(TOOLBAR) do
+        if result == nil or group.index > result then result = group.index end
+    end
+    return result
+end
+
+function functions.getToolbarGroup(index)
+    -- returns the toolbar group (table) with the provided index
+
+    for k, group in pairs(TOOLBAR) do
+        if group.index == index then
+            return group
+        end
+    end
+    return nil
+end
+
+function functions.getToolbarLength()
+    -- gets the right margin of the toolbar. Used to know where next group should be placed
+    -- returns x and y
+    local highestindex = fun.getHighestIndex()      -- scans toolbar groups.  --! should trap for a nil that never happens
+    local group = fun.getToolbarGroup(highestindex)                             --! could be nil?
+    local groupwidth, groupheight = fun.getWidthHeightofToolGroup(group)
+    return group.x + groupwidth, group.y + groupheight
+end
 
 return functions

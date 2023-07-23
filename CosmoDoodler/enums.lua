@@ -27,6 +27,8 @@ function enums.load()
     enum.imageShieldgenSmall = 7
     enum.imageReactorLarge = 8
     enum.imageControlroomSmall = 9
+    enum.imageHyperdriveSmall = 10
+    enum.imageLaserblasterSmall = 11
 
     enum.mousemodeNormal = 1
     enum.mousemodeCreate = 2
