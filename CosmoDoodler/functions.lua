@@ -12,6 +12,8 @@ function functions.loadImages()
     IMAGE[enum.imageControlroomSmall] = love.graphics.newImage("assets/images/controlroom_small.png")
     IMAGE[enum.imageHyperdriveSmall] = love.graphics.newImage("assets/images/hyperdrive_small.png")
     IMAGE[enum.imageLaserblasterSmall] = love.graphics.newImage("assets/images/laserblaster_small.png")
+    IMAGE[enum.imagePointDefence] = love.graphics.newImage("assets/images/point_defence.png")
+    IMAGE[enum.imageCrewQuartersMed] = love.graphics.newImage("assets/images/crewquarters_med.png")
 end
 
 function functions.loadFonts()
@@ -164,6 +166,7 @@ function functions.selectObject(x, y)
             x2 = v.x + imgwidth
             y2 = v.y
         else
+            print("v.rotation is " .. v.rotation)
             error()         -- should never happen
         end
         if x > x1 and x < x2 and y > y1 and y < y2 then
@@ -269,7 +272,13 @@ function functions.rotateObject(selectedIndex)
             if object.rotation == 3 * (math.pi / 2) then object.y = object.y - 64 end
 
             object.rotation = object.rotation + math.pi/2
-            if object.rotation > math.pi * 2 then object.rotation = object.rotation - (math.pi * 2) end
+
+            -- check for a full rotation
+            while object.rotation >= (math.pi * 2) do
+                object.rotation = object.rotation - (math.pi * 2)
+            end
+
+            assert(object.rotation < math.pi * 2)
         end
     end
 end
