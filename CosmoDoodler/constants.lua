@@ -41,6 +41,7 @@ function constants.load()
     TRANSLATE_TOOLBAR_Y = 0
 
     MOUSE_MODE = enum.mousemodeNormal       -- controls the state of the mouse
+    MOUSE_DOWN = {}                         -- used to remember and track mouse dragging
 
     OBJECTS = {}
     TOOLBAR = {}             -- the toolbar contains all the images
