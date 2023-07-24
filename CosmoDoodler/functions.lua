@@ -123,8 +123,6 @@ function functions.initialiseToolbar2()
     table.insert(TOOLBAR, toolgroup)
     x = x + 20
     print("x is now " .. x)
-
-    print(inspect(TOOLBAR))
 end
 
 function functions.selectObject(x, y)
@@ -135,21 +133,44 @@ function functions.selectObject(x, y)
     local result = false
     for k, v in pairs(OBJECTS) do
         -- do bounding box
-        local x1 = v.x
-        local y1 = v.y
+        -- this is the image height/width as saved on file (i.e. without any transformation)
 
+        local x1, y1, x2, y2
         local imagewidth = IMAGE[v.type]:getWidth()
         local imageheight = IMAGE[v.type]:getHeight()
-
-        local x2 = x1 + imagewidth
-        local y2 = y1 + imageheight
-
+        -- need to transform x's and y's if image is rotated
+        if v.rotation == nil or v.rotation == 0 then
+            x1 = v.x
+            y1 = v.y
+            x2 = x1 + imagewidth
+            y2 = y1 + imageheight
+        elseif v.rotation == math.pi/2 then
+            local imgheight = imagewidth
+            local imgwidth = imageheight
+            x1 = v.x - imgwidth
+            y1 = v.y
+            x2 = v.x
+            y2 = v.y + imgheight
+        elseif v.rotation == 2 * (math.pi / 2) then
+            x1 = v.x - imagewidth
+            y1 = v.y - imageheight
+            x2 = v.x
+            y2 = v.y
+        elseif v.rotation == 3 * (math.pi / 2) then
+            local imgheight = imagewidth
+            local imgwidth = imageheight
+            x1 = v.x
+            y1 = v.y - imgwidth
+            x2 = v.x + imgwidth
+            y2 = v.y
+        else
+            error()         -- should never happen
+        end
         if x > x1 and x < x2 and y > y1 and y < y2 then
             v.isSelected = true
             result = true
-        else
-            -- v.isSelected = false
         end
+
     end
     return result
 end

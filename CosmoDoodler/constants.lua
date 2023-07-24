@@ -2,7 +2,7 @@ constants = {}
 
 function constants.load()
 
-    GAME_VERSION = "dev version 0.01"
+    GAME_VERSION = "dev version 0.02"
     love.window.setTitle("CosmoDoodler " .. GAME_VERSION)
 
     SCREEN_STACK = {}

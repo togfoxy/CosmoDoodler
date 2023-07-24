@@ -126,6 +126,7 @@ function love.mousemoved( x, y, dx, dy, istouch )
 	local camx, camy = cam:toWorld(x, y)	-- converts screen x/y to world x/y
 
 	if love.mouse.isDown(1) then
+	
 		--! restore the move function
 		-- local selectedIndex = fun.getSelectedObject()
 		-- if selectedIndex ~= nil then
@@ -138,7 +139,6 @@ function love.mousemoved( x, y, dx, dy, istouch )
         TRANSLATEX = TRANSLATEX - dx
         TRANSLATEY = TRANSLATEY - dy
     end
-
 end
 
 function love.wheelmoved(x, y)
