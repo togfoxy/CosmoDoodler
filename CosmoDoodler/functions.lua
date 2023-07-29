@@ -49,16 +49,20 @@ function functions.createObjects(mousex, mousey)
                     newobject.x = mousex + icon.x
                     newobject.y = mousey + icon.y
                     newobject.type = icon.type
-                    newobject.index = fun.getLastIndex() + 1
+                    local newindex = fun.getLastOBjectsIndex()
+                    newindex = newindex + 1
+                    newobject.index = newindex
                     table.insert(OBJECTS, newobject)
+
+print("Created object with index #" .. newobject.index)
                 end
             end
         end
     end
 end
 
-function functions.getLastIndex()
-    -- gets the last index in OBJECTS table. Useful for deleting the last object.
+function functions.getLastToolbarIndex()
+    -- gets the last index in toolbar table. Useful for deleting the last object.
     -- Output: nil means empty table.
     local highestindex = 0
     for k, v in pairs(TOOLBAR) do
@@ -69,9 +73,21 @@ function functions.getLastIndex()
     return highestindex
 end
 
+function functions.getLastOBjectsIndex()
+    -- gets the last index in OBJECTS table. Useful for deleting the last object.
+    -- Output: nil means empty table.
+    local highestindex = 0
+    for k, v in pairs(OBJECTS) do
+        if highestindex == nil or v.index > highestindex then
+            highestindex = v.index
+        end
+    end
+    return highestindex
+end
+
 function functions.deleteLastObject()
 
-    local lastindex = fun.getLastIndex()
+    local lastindex = fun.getLastOBjectsIndex()
     for k, v in pairs(OBJECTS) do
         if v.index == lastindex then
             OBJECTS[k] = nil
@@ -91,7 +107,7 @@ function functions.initialiseToolbar2()
         toolgroup.x = x
         toolgroup.y = y
         toolgroup.isVanilla = true
-        toolgroup.index = fun.getLastIndex() + 1
+        toolgroup.index = fun.getLastToolbarIndex() + 1
 
         -- create and add the icons
         local toolbaritem = {}
@@ -108,7 +124,7 @@ function functions.initialiseToolbar2()
     local toolgroup = {}
     toolgroup.x = x
     toolgroup.y = y
-    toolgroup.index = fun.getLastIndex() + 1
+    toolgroup.index = fun.getLastToolbarIndex() + 1
 
     local toolbaritem = {}
     toolbaritem.type = 1
@@ -180,6 +196,7 @@ end
 
 function functions.getSelectedObject()
     -- returns the INDEX of the selected object or nil
+    --! only returns first object if more than one is selected
 
     for k, v in pairs(OBJECTS) do
         if v.isSelected then
@@ -187,6 +204,19 @@ function functions.getSelectedObject()
         end
     end
     return nil
+end
+
+function functions.getSelectedObjects()
+    -- returns the INDEX of the selected object or nil
+    --! only returns first object if more than one is selected
+
+    local result = {}           -- a list of indexes for all selected objects
+    for k, v in pairs(OBJECTS) do
+        if v.isSelected then
+            table.insert(result, v.index)
+        end
+    end
+    return result
 end
 
 function functions.getNearestNode(x, y)
@@ -218,6 +248,7 @@ function functions.deleteObject(index)
     for k, v in pairs(OBJECTS) do
         if v.index == index then
             OBJECTS[k] = nil
+print("Deleting object with index #" .. index)
         end
     end
 end
@@ -296,7 +327,7 @@ function functions.saveModule()
     toolgroup.x = x + 20
     toolgroup.y = 33
     toolgroup.isVanilla = false
-    toolgroup.index = fun.getLastIndex() + 1
+    toolgroup.index = fun.getLastToolbarIndex() + 1
 
     -- find all selected items and add them to the group
     for k, object in pairs(OBJECTS) do
