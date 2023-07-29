@@ -1,5 +1,5 @@
 draw = {}
- 
+
 function draw.drawGrid()
     local x1 = -480
     local y1 = 288
@@ -19,15 +19,17 @@ end
 
 function draw.drawObjects()
     love.graphics.setColor(1,1,1,1)
-    for k, v in pairs(OBJECTS) do
-        if v.isSelected then
-            love.graphics.setColor(0,1,0,1)
-        else
-            love.graphics.setColor(1,1,1,1)
-        end
+    if OBJECTS ~= nil then
+        for k, v in pairs(OBJECTS) do
+            if v.isSelected then
+                love.graphics.setColor(0,1,0,1)
+            else
+                love.graphics.setColor(1,1,1,1)
+            end
 
-        local imagetype = v.type    -- a number that is also an enum
-        love.graphics.draw(IMAGE[imagetype], v.x, v.y, v.rotation, 1, 1, 0,0)
+            local imagetype = v.type    -- a number that is also an enum
+            love.graphics.draw(IMAGE[imagetype], v.x, v.y, v.rotation, 1, 1, 0,0)
+        end
     end
 end
 
@@ -46,9 +48,17 @@ function draw.drawToolbar()
             love.graphics.setColor(1, 1, 1, 1)
         end
 
+        -- scale down if tool or group is larger than the toolbar
+        local w, h = fun.getWidthHeightofToolGroup(toolgroup)
+        local scale = 1
+        local maxheight = TOOLBAR_HEIGHT * 0.9      -- the max height allowed before scaling is forced
+        if h > (maxheight) then
+            -- scale
+            scale = cf.round(maxheight / h, 2)
+        end
         for j, tool in pairs(toolgroup) do
             if type(tool) == "table" then
-                love.graphics.draw(IMAGE[tool.type], toolgroup.x + tool.x, toolgroup.y + tool.y)
+                love.graphics.draw(IMAGE[tool.type], (toolgroup.x + tool.x) + scale, (toolgroup.y + tool.y) * scale, 0, scale, scale)
             end
         end
     end

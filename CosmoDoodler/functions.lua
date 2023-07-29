@@ -1,6 +1,13 @@
 functions = {}
 
 function functions.loadImages()
+    -- need to be loaded in correct order
+    IMAGE[enum.imageLaserblasterSmall] = love.graphics.newImage("assets/images/laserblaster_small.png")
+    IMAGE[enum.imageLaserblasterLarge] = love.graphics.newImage("assets/images/laserblaster_large.png")
+    IMAGE[enum.imageDisrupter] = love.graphics.newImage("assets/images/disrupter.png")
+    IMAGE[enum.imagePointDefence] = love.graphics.newImage("assets/images/point_defence.png")
+    IMAGE[enum.imageMininglaserSmall] = love.graphics.newImage("assets/images/mininglaser_small.png")
+
     IMAGE[enum.imageCorridor] = love.graphics.newImage("assets/images/corridor.png")
     IMAGE[enum.image3x2Storage] = love.graphics.newImage("assets/images/3x2storage.png")
     IMAGE[enum.imageArmour] = love.graphics.newImage("assets/images/armor.png")
@@ -11,9 +18,13 @@ function functions.loadImages()
     IMAGE[enum.imageReactorLarge] = love.graphics.newImage("assets/images/reactor_large.png")
     IMAGE[enum.imageControlroomSmall] = love.graphics.newImage("assets/images/controlroom_small.png")
     IMAGE[enum.imageHyperdriveSmall] = love.graphics.newImage("assets/images/hyperdrive_small.png")
-    IMAGE[enum.imageLaserblasterSmall] = love.graphics.newImage("assets/images/laserblaster_small.png")
-    IMAGE[enum.imagePointDefence] = love.graphics.newImage("assets/images/point_defence.png")
+
+
     IMAGE[enum.imageCrewQuartersMed] = love.graphics.newImage("assets/images/crewquarters_med.png")
+
+
+
+
 end
 
 function functions.loadFonts()
@@ -40,6 +51,8 @@ function functions.createObjects(mousex, mousey)
     -- if a tool group is selected then place that tool group on the grid
     -- a group with multiple icons is broken
 
+    if OBJECTS == nil then OBJECTS = {} end
+
     for k, group in pairs(TOOLBAR) do
         if group.isSelected then
             -- found the selected group. Dissect all the icons in it
@@ -53,8 +66,6 @@ function functions.createObjects(mousex, mousey)
                     newindex = newindex + 1
                     newobject.index = newindex
                     table.insert(OBJECTS, newobject)
-
-print("Created object with index #" .. newobject.index)
                 end
             end
         end
@@ -77,16 +88,17 @@ function functions.getLastOBjectsIndex()
     -- gets the last index in OBJECTS table. Useful for deleting the last object.
     -- Output: nil means empty table.
     local highestindex = 0
-    for k, v in pairs(OBJECTS) do
-        if highestindex == nil or v.index > highestindex then
-            highestindex = v.index
+    if OBJECTS ~= nil then
+        for k, v in pairs(OBJECTS) do
+            if highestindex == nil or v.index > highestindex then
+                highestindex = v.index
+            end
         end
     end
     return highestindex
 end
 
 function functions.deleteLastObject()
-
     local lastindex = fun.getLastOBjectsIndex()
     for k, v in pairs(OBJECTS) do
         if v.index == lastindex then
@@ -101,7 +113,8 @@ function functions.initialiseToolbar2()
     local y = 33
 
     -- add each icon as a single item group
-    for i = 1, #IMAGE do
+    -- for i = 1, #IMAGE do
+    for k, v in pairs(IMAGE) do
         -- create an empty group
         local toolgroup = {}
         toolgroup.x = x
@@ -111,7 +124,7 @@ function functions.initialiseToolbar2()
 
         -- create and add the icons
         local toolbaritem = {}
-        toolbaritem.type = i
+        toolbaritem.type = k
         toolbaritem.x = 0
         toolbaritem.y = 0
         table.insert(toolgroup, toolbaritem)
@@ -127,20 +140,19 @@ function functions.initialiseToolbar2()
     toolgroup.index = fun.getLastToolbarIndex() + 1
 
     local toolbaritem = {}
-    toolbaritem.type = 1
+    toolbaritem.type = enum.imageCorridor
     toolbaritem.x = 0
     toolbaritem.y = 0
     table.insert(toolgroup, toolbaritem)
 
     local toolbaritem = {}
-    toolbaritem.type = 1
+    toolbaritem.type = enum.imageCorridor
     toolbaritem.x = 64
     toolbaritem.y = 0
     table.insert(toolgroup, toolbaritem)
 
     table.insert(TOOLBAR, toolgroup)
     x = x + 20
-    print("x is now " .. x)
 end
 
 function functions.selectObject(x, y)
@@ -149,47 +161,48 @@ function functions.selectObject(x, y)
     -- input: x,y
     -- output: returns true if something is under the mouse
     local result = false
-    for k, v in pairs(OBJECTS) do
-        -- do bounding box
-        -- this is the image height/width as saved on file (i.e. without any transformation)
+    if OBJECTS ~= nil then
+        for k, v in pairs(OBJECTS) do
+            -- do bounding box
+            -- this is the image height/width as saved on file (i.e. without any transformation)
 
-        local x1, y1, x2, y2
-        local imagewidth = IMAGE[v.type]:getWidth()
-        local imageheight = IMAGE[v.type]:getHeight()
-        -- need to transform x's and y's if image is rotated
-        if v.rotation == nil or v.rotation == 0 then
-            x1 = v.x
-            y1 = v.y
-            x2 = x1 + imagewidth
-            y2 = y1 + imageheight
-        elseif v.rotation == math.pi/2 then
-            local imgheight = imagewidth
-            local imgwidth = imageheight
-            x1 = v.x - imgwidth
-            y1 = v.y
-            x2 = v.x
-            y2 = v.y + imgheight
-        elseif v.rotation == 2 * (math.pi / 2) then
-            x1 = v.x - imagewidth
-            y1 = v.y - imageheight
-            x2 = v.x
-            y2 = v.y
-        elseif v.rotation == 3 * (math.pi / 2) then
-            local imgheight = imagewidth
-            local imgwidth = imageheight
-            x1 = v.x
-            y1 = v.y - imgwidth
-            x2 = v.x + imgwidth
-            y2 = v.y
-        else
-            print("v.rotation is " .. v.rotation)
-            error()         -- should never happen
+            local x1, y1, x2, y2
+            local imagewidth = IMAGE[v.type]:getWidth()
+            local imageheight = IMAGE[v.type]:getHeight()
+            -- need to transform x's and y's if image is rotated
+            if v.rotation == nil or v.rotation == 0 then
+                x1 = v.x
+                y1 = v.y
+                x2 = x1 + imagewidth
+                y2 = y1 + imageheight
+            elseif v.rotation == math.pi/2 then
+                local imgheight = imagewidth
+                local imgwidth = imageheight
+                x1 = v.x - imgwidth
+                y1 = v.y
+                x2 = v.x
+                y2 = v.y + imgheight
+            elseif v.rotation == 2 * (math.pi / 2) then
+                x1 = v.x - imagewidth
+                y1 = v.y - imageheight
+                x2 = v.x
+                y2 = v.y
+            elseif v.rotation == 3 * (math.pi / 2) then
+                local imgheight = imagewidth
+                local imgwidth = imageheight
+                x1 = v.x
+                y1 = v.y - imgwidth
+                x2 = v.x + imgwidth
+                y2 = v.y
+            else
+                print("v.rotation is " .. v.rotation)
+                error()         -- should never happen
+            end
+            if x > x1 and x < x2 and y > y1 and y < y2 then
+                v.isSelected = true
+                result = true
+            end
         end
-        if x > x1 and x < x2 and y > y1 and y < y2 then
-            v.isSelected = true
-            result = true
-        end
-
     end
     return result
 end
@@ -248,7 +261,6 @@ function functions.deleteObject(index)
     for k, v in pairs(OBJECTS) do
         if v.index == index then
             OBJECTS[k] = nil
-print("Deleting object with index #" .. index)
         end
     end
 end
@@ -264,7 +276,8 @@ end
 function functions.getWidthHeightofToolGroup(group)
     -- checks all the x's and widths of all the tools and returns the rightmost x2 value
     -- input: a tool group
-    -- output: the width of the group
+    -- output: the width and height of the group
+    --! suspects it returns the x2/y2 value and not the group height
 
     local xresult, yresult = 0, 0
     for k, tool in pairs(group) do
