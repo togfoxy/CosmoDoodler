@@ -32,6 +32,7 @@ end
 
 function love.mousepressed( x, y, button, istouch, presses)
 	local camx, camy = cam:toWorld(x, y)	-- converts screen x/y to world x/y
+	local resx, resy = res.toGame(x, y)
 
 	if button == 1 then
 		-- this is used to detect mouse drags
@@ -43,23 +44,23 @@ function love.mousepressed( x, y, button, istouch, presses)
 	end
 
 	if y <= TOOLBAR_HEIGHT then
-		-- toolbar. Do nothing. Selection is managed in mouserelease
+		-- toolbar. Clear selected objects
+		fun.clearAllSelectedObjects()
 	elseif button == 1 and camx > 100 and camy > TOOLBAR_HEIGHT then		-- not trash can
 		local objectclicked = fun.selectObject(camx, camy)		-- will select or clear depending on mouse click
-
-
-
 		if not objectclicked then
 			-- no object selected so create an object
-			local selectedgroup = fun.getSelectedToolbarGroup()
-			if selectedgroup == nil then
-				-- do nothing
+			local selectedtoolbargroup = fun.getSelectedToolbarGroup()
+			if selectedtoolbargroup == nil then
+				-- do nothing and clear selection
+				fun.clearAllSelectedObjects()
 			else
 				local nearestx = cf.multiple(camx, 64) - 32		--! there is a function that does this
 				local nearesty = cf.multiple(camy, 64) - 32
-				fun.createObjects(nearestx, nearesty)
 				fun.clearAllSelectedObjects()
-				fun.selectObject(camx, camy)		-- will select or clear depending on mouse click
+				fun.createObjects(nearestx, nearesty, true)
+
+				-- fun.selectObject(camx, camy)		-- will select or clear depending on mouse click
 			end
 		else
 			-- existing object is clicked
@@ -77,6 +78,7 @@ end
 
 function love.mousereleased(x, y, button, isTouch)
 	local camx, camy = cam:toWorld(x, y)	-- converts screen x/y to world x/y
+	local resx, resy = res.toGame(x, y)
 
 	if button == 1 then
 		-- stop tracking mouse dragging
@@ -84,6 +86,9 @@ function love.mousereleased(x, y, button, isTouch)
 	end
 
 	if button == 1 and y <= TOOLBAR_HEIGHT then
+	-- if button == 1 and resy <= TOOLBAR_HEIGHT then
+	-- if button == 1 and resy <= res.toScreenY(TOOLBAR_HEIGHT) then
+
 		-- toolbar is clicked
 		-- do bounding box things
 		for k, group in pairs(TOOLBAR) do
@@ -94,7 +99,9 @@ function love.mousereleased(x, y, button, isTouch)
 			local y1 = group.y
 			local y2 = y1 + groupheight
 
-			if x >= x1 and x <= x2 and y >= y1 and y <= y2 then
+			-- if x >= x1 and x <= x2 and y >= y1 and y <= y2 then
+			-- if camx >= x1 and camx <= x2 and camy >= y1 and camy <= y2 then
+			if resx >= x1 and resx <= x2 and resy >= y1 and resy <= y2 then
 				-- click detected
 				group.isSelected = not group.isSelected
 			else
@@ -103,12 +110,14 @@ function love.mousereleased(x, y, button, isTouch)
 		end
 	elseif button == 1 and x < 100 then
 		-- trashcan. Destroy object
-		local selectedIndex = fun.getSelectedObject()
-		fun.deleteObject(selectedIndex)
+		local selectedIndexes = fun.getSelectedObjects()			-- returns a list of selected indexes
+		for i = 1, #selectedIndexes do
+			fun.deleteObject(selectedIndexes[i])
+		end
 	elseif button == 2 then
 		if love.mouse.isDown(1) then
 			-- rotate current item
-			local selectedIndex = fun.getSelectedObject()
+			local selectedIndex = fun.getSelectedObject() 			--! only rotates the first selected object
 			fun.rotateObject(selectedIndex)
 		elseif y <= TOOLBAR_HEIGHT then
 			-- maybe delete a group
@@ -140,35 +149,28 @@ end
 function love.mousemoved( x, y, dx, dy, istouch )
 	local camx, camy = cam:toWorld(x, y)	-- converts screen x/y to world x/y
 
-	if love.mouse.isDown(1) then
-
+	if love.mouse.isDown(1) and y > TOOLBAR_HEIGHT then
 		-- detecting a drag event
+		if MOUSE_DOWN.x ~= nil then
+			-- get original and new node
+			local nodex1, nodey1 = fun.getNearestNode(MOUSE_DOWN.x, MOUSE_DOWN.y)
+			local nodex2, nodey2 = fun.getNearestNode(camx, camy)
 
-		-- get original and new node
-		local nodex1, nodey1 = fun.getNearestNode(MOUSE_DOWN.x, MOUSE_DOWN.y)
-		local nodex2, nodey2 = fun.getNearestNode(camx, camy)
+			-- now get the distance to move all selected object by
+			local deltax = nodex2 - nodex1
+			local deltay = nodey2 - nodey1
 
-		-- now get the distance to move all selected object by
-		local deltax = nodex2 - nodex1
-		local deltay = nodey2 - nodey1
-
-		-- now move all the objects this much
-		for k, object in pairs(OBJECTS) do
-			if object.isSelected then
-				object.x = object.x + deltax
-				object.y = object.y + deltay
+			-- now move all the objects this much
+			for k, object in pairs(OBJECTS) do
+				if object.isSelected then
+					object.x = object.x + deltax
+					object.y = object.y + deltay
+				end
 			end
 		end
 
 		MOUSE_DOWN.x = camx
 		MOUSE_DOWN.y = camy
-
-		--! restore the move function
-		-- local selectedIndex = fun.getSelectedObject()
-		-- if selectedIndex ~= nil then
-		-- 	local nodex, nodey = fun.getNearestNode(camx, camy)
-		-- 	fun.updateObjectXY(selectedIndex, nodex, nodey)
-		-- end
 	end
 
     if love.mouse.isDown(2) or love.mouse.isDown(3) then
@@ -266,7 +268,6 @@ function love.load()
 	fun.initialiseToolbar2()
 	OBJECTS = cf.loadTableFromFile("objects.dat")
 	-- TOOLBAR = cf.loadTableFromFile("toolbar.dat")
-
 end
 
 function love.draw()

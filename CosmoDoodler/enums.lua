@@ -18,19 +18,26 @@ function enums.load()
     enum.audioMainMenu = 1
     -- add extra items below this line
 
-    enum.imageCorridor = 1
-    enum.image3x2Storage = 2
-    enum.imageArmour = 3
-    enum.imageArmourTri = 4
-    enum.imageThrusterHuge = 5
-    enum.imageThrusterMed = 6
-    enum.imageShieldgenSmall = 7
-    enum.imageReactorLarge = 8
-    enum.imageControlroomSmall = 9
-    enum.imageHyperdriveSmall = 10
-    enum.imageLaserblasterSmall = 11
-    enum.imagePointDefence = 12
-    enum.imageCrewQuartersMed = 13
+    enum.imageLaserblasterSmall = 1
+    enum.imageLaserblasterLarge = 2
+    enum.imageDisrupter = 3
+    enum.imagePointDefence = 4
+    enum.imageMininglaserSmall = 5
+
+
+    enum.imageCorridor = 81
+    enum.image3x2Storage = 82
+    enum.imageArmour = 83
+    enum.imageArmourTri = 84
+    enum.imageThrusterHuge = 85
+    enum.imageThrusterMed = 86
+    enum.imageShieldgenSmall = 87
+    enum.imageReactorLarge = 88
+    enum.imageControlroomSmall = 89
+    enum.imageHyperdriveSmall = 90
+    enum.imageCrewQuartersMed = 91
+
+
 
     enum.mousemodeNormal = 1
     enum.mousemodeCreate = 2
