@@ -41,17 +41,20 @@ function functions.loadAudio()
     -- AUDIO[enum.audioMainMenu] = love.audio.newSource("assets/audio/XXX.mp3", "stream")
 end
 
--- Returns the closest multiple of 'size' (defaulting to 10).
 local function multiple(n, size)
+    -- Returns the closest multiple of 'size' (defaulting to 10).
     size = size or 10
     return cf.round(n/size)*size
 end
 
-function functions.createObjects(mousex, mousey)
+function functions.createObjects(mousex, mousey, select)
     -- if a tool group is selected then place that tool group on the grid
-    -- a group with multiple icons is broken
+    -- can also optionally selects/highlights that object during the creation process
+    -- input: mousex, y
+    -- input: select = should object be selected immediately after creation. Defaults to "false"
 
     if OBJECTS == nil then OBJECTS = {} end
+    if select == nil then select = false end
 
     for k, group in pairs(TOOLBAR) do
         if group.isSelected then
@@ -65,6 +68,7 @@ function functions.createObjects(mousex, mousey)
                     local newindex = fun.getLastOBjectsIndex()
                     newindex = newindex + 1
                     newobject.index = newindex
+                    newobject.isSelected = select
                     table.insert(OBJECTS, newobject)
                 end
             end
@@ -251,6 +255,7 @@ end
 
 function functions.clearAllSelectedObjects()
 
+    if OBJECTS == nil then OBJECTS = {} end
     for k, v in pairs(OBJECTS) do
         v.isSelected = false
     end
